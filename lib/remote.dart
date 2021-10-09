@@ -4,12 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:rxcombinebloc/game.dart';
 
 class Remote {
-  static final Remote _instance = Remote._internal();
-  Remote._internal();
-
   factory Remote() {
     return _instance;
   }
+
+  Remote._internal();
+
+  static final Remote _instance = Remote._internal();
 
   Future<List<Game>> getListGame({int page = 1}) async {
     // Create url destination
