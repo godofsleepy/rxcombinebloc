@@ -41,7 +41,20 @@ class GetGames extends HomeEvent {
   GetGames(this.page);
 }
 
+class ResultGames extends HomeEvent {
+  final List<Game> data;
+
+  ResultGames(this.data);
+}
+
+class ErrorGames extends HomeEvent {
+  final Object error;
+
+  ErrorGames(this.error);
+}
+
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
+  final Remote _remote;
   HomeBloc({required Remote remote})
       : _remote = remote,
         super(const HomeState()) {
@@ -49,17 +62,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(state.copyWith(
         status: HomeStatus.loading,
       ));
-      List<Game> data = await _remote.getListGame(page: event.page);
-      if (data.isNotEmpty) {
+      _remote.getListGame(page: event.page).listen((data) {
+        print("on data");
+        add(ResultGames(data));
+      }, onDone: () {
+        print("done");
+      }, onError: (e) {
+        print(e.toString());
+        add(ErrorGames(e));
+      });
+    });
+
+    on<ResultGames>((event, emit) {
+      if (event.data.isNotEmpty) {
         emit(state.copyWith(
           status: HomeStatus.success,
-          games: data,
+          games: event.data,
         ));
       } else {
         emit(state.copyWith(status: HomeStatus.failed));
       }
     });
-  }
 
-  final Remote _remote;
+    on<ErrorGames>((event, emit) {
+      emit(state.copyWith(status: HomeStatus.failed));
+    });
+  }
 }
